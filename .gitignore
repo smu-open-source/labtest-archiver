@@ -1,0 +1,73 @@
+# Build artifacts
+build/
+bin/
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# Executables
+labtest-archiver
+labtest-grader
+*.exe
+*.out
+*.app
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Compiler and IDE files
+*.gch
+*.pch
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# CMake (if added later)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile.cmake
+
+# Test and coverage
+*.gcda
+*.gcno
+*.gcov
+coverage/
+*.profraw
+*.profdata
+
+# Dependencies
+*.d
+.deps/
+
+# Archive files (for testing)
+*.zip
+*.tar.gz
+*.tgz
+
+# Documentation build
+docs/_build/
+docs/html/
+docs/latex/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+
+# Core dumps
+core
+core.*
+vgcore.*
