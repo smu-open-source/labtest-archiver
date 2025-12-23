@@ -4,4 +4,4 @@
 -Wextra
 -pedantic
 -Iinclude
--Ilib
+-Ilib/miniz
