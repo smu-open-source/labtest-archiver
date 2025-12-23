@@ -44,4 +44,64 @@ void print_archiver_usage(void);
  */
 int parse_archive_args(int argc, char **argv, ArchiveOptions_t *options);
 
+/**
+ * TODO: Should define own structs here to represent:
+ * - ZIP archive state/handle (to track the archive being created)
+ * - File entry information (filename, size, compression status)
+ *
+ * Look at the miniz documentation to understand what you need to track.
+ */
+
+/**
+ * @brief Create a new ZIP archive
+ *
+ * @param output_path Path where the ZIP file will be created
+ * @param compression_level Compression level (0-9)
+ * @return Pointer to archive state, or NULL on failure
+ */
+void *create_archive(const char *output_path, int compression_level);
+
+/**
+ * @brief Add a single file to the archive
+ *
+ * @param archive Pointer to archive state (from create_archive)
+ * @param file_path Path to the file on disk
+ * @param archive_name Path/name of file inside the ZIP archive
+ * @param verbose Print progress messages if true
+ * @return SUCCESS on success, error code on failure
+ */
+int add_file_to_archive(void *archive, const char *file_path,
+                        const char *archive_name, bool verbose);
+
+/**
+ * @brief Finalize and close the archive
+ *
+ * @param archive Pointer to archive state
+ * @param verbose Print summary if true
+ * @return SUCCESS on success, error code on failure
+ */
+int finalize_archive(void *archive, bool verbose);
+
+/**
+ * @brief Validate that all files in the list exist
+ *
+ * @param file_list Array of file paths to validate
+ * @param file_count Number of files in the list
+ * @return SUCCESS if all files exist, error code otherwise
+ */
+int validate_file_list(char **file_list, int file_count);
+
+/**
+ * @brief Create a ZIP archive from a list of files
+ *
+ * @param file_list Array of file paths to archive
+ * @param file_count Number of files to archive
+ * @param output_path Path for the output ZIP file
+ * @param options Archive options (compression level, verbose, etc.)
+ * @return SUCCESS on success, error code on failure
+ */
+int create_archive_from_file_list(char **file_list, int file_count,
+                                  const char             *output_path,
+                                  const ArchiveOptions_t *options);
+
 #endif // ARCHIVER_H

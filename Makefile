@@ -17,12 +17,12 @@ BIN_DIR := bin
 
 # Source files
 COMMON_SRC := $(SRC_DIR)/common.c
-ARCHIVER_SRC := $(SRC_DIR)/archiver.c $(SRC_DIR)/archiver_main.c
+ARCHIVER_SRC := $(SRC_DIR)/config.c $(SRC_DIR)/archiver.c $(SRC_DIR)/archiver_main.c
 GRADER_SRC := $(SRC_DIR)/grader.c $(SRC_DIR)/grader_main.c
 
 # Object files
 COMMON_OBJ := $(BUILD_DIR)/common.o
-ARCHIVER_OBJ := $(BUILD_DIR)/archiver.o $(BUILD_DIR)/archiver_main.o
+ARCHIVER_OBJ := $(BUILD_DIR)/config.o $(BUILD_DIR)/archiver.o $(BUILD_DIR)/archiver_main.o
 GRADER_OBJ := $(BUILD_DIR)/grader.o $(BUILD_DIR)/grader_main.o
 
 # Binaries
@@ -61,6 +61,11 @@ $(GRADER_BIN): $(COMMON_OBJ) $(GRADER_OBJ) | $(BIN_DIR)
 
 # Compile common object
 $(BUILD_DIR)/common.o: $(SRC_DIR)/common.c $(INC_DIR)/common.h | $(BUILD_DIR)
+	@echo "Compiling $<..."
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Compile config object
+$(BUILD_DIR)/config.o: $(SRC_DIR)/config.c $(INC_DIR)/config.h $(INC_DIR)/common.h | $(BUILD_DIR)
 	@echo "Compiling $<..."
 	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
