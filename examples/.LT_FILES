@@ -1,0 +1,19 @@
+# All the # indicates single line comments, allowing comments to be added in config files
+# 'required:' indicates all the required files, there should only be 1 'required:' directive
+# It should then expect all the required files to be indented either: 2 space or a tab ('\t')
+# There should not be any "glob" pattern in this 
+required:
+  required_file_1
+  required_file_2 # after the # it's parsed as comments, trailing space is not part of file name
+  required_dir/ # optional trailing '/' to indicate directory, and there should at least be 1 file, all nested directory are parsed recursively
+  required_dir_2 # without trailing '/' will attempt to parse required_dir_2 as a file first, if it's a directory, then attempt to dig inside
+# If there's any comment line here like this, it's gonna be skipped
+  required_file_3
+  required_dir_3/required_file_4 # this indicates the path of the file in a directory
+
+# 'optional:' indicates all the optional files that is not validated for existence, but included in archive
+optional:
+  optional_file_1
+  optional_dir_1/ # this doesn't check if there are files inside, but if there are, included all the files within
+  optional_dir_2 # this attempt to check if this is a file before checking if it's a directory
+  optional_glob/*.txt # this will evaluate the glob and find all the files inside.
