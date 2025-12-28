@@ -10,6 +10,7 @@
 #define ARCHIVER_H
 
 #include "common.h"
+#include "miniz.h"
 
 /* Archive configuration */
 #define DEFAULT_COMPRESSION_LEVEL 6
@@ -23,6 +24,14 @@ typedef struct {
     bool verbose;           /* Verbose output */
     // TODO: Think about what options might be needed for archiving
 } ArchiveOptions_t;
+
+/*
+*/
+
+typedef struct {
+    mz_zip_archive * zip;
+    int compression_level;
+} archive_state;
 
 /**
  * @brief Initialize archive options with defaults

@@ -4,6 +4,7 @@
  */
 
 #include "archiver.h"
+#include "miniz.h"
 #include <getopt.h>
 #include <unistd.h>
 
@@ -16,7 +17,8 @@ void init_archive_options(ArchiveOptions_t *options) {
     // - Set verbose to false
     // - Initialize any other fields you added to the struct
 
-    (void)options; // Remove this line when implementing
+    options -> compression_level = DEFAULT_COMPRESSION_LEVEL;
+    options -> verbose = false;
 }
 
 void print_archiver_usage(void) {
@@ -79,9 +81,20 @@ int parse_archive_args(int argc, char **argv, ArchiveOptions_t *options) {
 
 void *create_archive(const char *output_path, int compression_level) {
     // TODO: Create a new ZIP archive using miniz
+    mz_zip_archive *zip = malloc(sizeof(mz_zip_archive));
+    memset(zip, 0, sizeof(mz_zip_archive));
+    
     // TODO: Allocate memory for an archive state structure
     // TODO: Initialize the miniz ZIP writer
+    if (!mz_zip_writer_init_file(zip, output_path, 0)) {
+        free(zip);
+        return NULL;
+    }
+
+    archive_state *archive = malloc(sizeof(archive_state));
+    archive -> zip = zip;
     // TODO: Store the compression level
+    archive -> compression_level = compression_level;
     // TODO: Return the archive state pointer
     //
     // Hints:
@@ -96,15 +109,18 @@ void *create_archive(const char *output_path, int compression_level) {
     //       free(zip);
     //       return NULL;
     //   }
-
-    (void)output_path;
-    (void)compression_level;
-    return NULL;
+    return archive;
 }
 
 int add_file_to_archive(void *archive, const char *file_path,
                         const char *archive_name, bool verbose) {
     // TODO: Add a file to the ZIP archive
+    mz_zip_writer_add_file(archive, 
+                            archive_name, 
+                            file_path, 
+                            NULL, 
+                            0, 
+                            compression_level);
     // TODO: Read the file from disk
     // TODO: Compress it and add to the archive
     // TODO: Print progress if verbose is true
