@@ -68,7 +68,7 @@ int parse_archive_args(int argc, char **argv, ArchiveOptions_t *options);
  * @param compression_level Compression level (0-9)
  * @return Pointer to archive state, or NULL on failure
  */
-void *create_archive(const char *output_path, int compression_level);
+archive_state *create_archive(const char *output_path, int compression_level);
 
 /**
  * @brief Add a single file to the archive
@@ -79,7 +79,7 @@ void *create_archive(const char *output_path, int compression_level);
  * @param verbose Print progress messages if true
  * @return SUCCESS on success, error code on failure
  */
-int add_file_to_archive(void *archive, const char *file_path,
+int add_file_to_archive(archive_state *archive, const char *file_path,
                         const char *archive_name, bool verbose);
 
 /**
@@ -89,7 +89,7 @@ int add_file_to_archive(void *archive, const char *file_path,
  * @param verbose Print summary if true
  * @return SUCCESS on success, error code on failure
  */
-int finalize_archive(void *archive, bool verbose);
+int finalize_archive(archive_state *archive, bool verbose);
 
 /**
  * @brief Validate that all files in the list exist
@@ -112,5 +112,12 @@ int validate_file_list(char **file_list, int file_count);
 int create_archive_from_file_list(char **file_list, int file_count,
                                   const char             *output_path,
                                   const ArchiveOptions_t *options);
+
+/**
+* @brief free the archive state pointer
+* 
+* @param archive pointer to the archive state pointer
+*/
+void free_archive(archive_state * archive);
 
 #endif // ARCHIVER_H

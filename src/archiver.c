@@ -7,9 +7,10 @@
 #include "miniz.h"
 #include <getopt.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 void init_archive_options(ArchiveOptions_t *options) {
-    // TODO: Implement this function to initialize archive options
+    // Implement this function to initialize archive options
     // with default values
     //
     // Hints:
@@ -79,13 +80,13 @@ int parse_archive_args(int argc, char **argv, ArchiveOptions_t *options) {
     return SUCCESS;
 }
 
-void *create_archive(const char *output_path, int compression_level) {
-    // TODO: Create a new ZIP archive using miniz
+archive_state *create_archive(const char *output_path, int compression_level) {
+    // Create a new ZIP archive using miniz
     mz_zip_archive *zip = malloc(sizeof(mz_zip_archive));
     memset(zip, 0, sizeof(mz_zip_archive));
     
-    // TODO: Allocate memory for an archive state structure
-    // TODO: Initialize the miniz ZIP writer
+    // Allocate memory for an archive state structure
+    // Initialize the miniz ZIP writer
     if (!mz_zip_writer_init_file(zip, output_path, 0)) {
         free(zip);
         return NULL;
@@ -93,9 +94,10 @@ void *create_archive(const char *output_path, int compression_level) {
 
     archive_state *archive = malloc(sizeof(archive_state));
     archive -> zip = zip;
-    // TODO: Store the compression level
+    // Store the compression level
     archive -> compression_level = compression_level;
-    // TODO: Return the archive state pointer
+    // Return the archive state pointer
+    return archive;
     //
     // Hints:
     // - Include "miniz.h" at the top of this file
@@ -109,21 +111,33 @@ void *create_archive(const char *output_path, int compression_level) {
     //       free(zip);
     //       return NULL;
     //   }
-    return archive;
 }
 
-int add_file_to_archive(void *archive, const char *file_path,
+int add_file_to_archive(archive_state *archive, const char *file_path,
                         const char *archive_name, bool verbose) {
-    // TODO: Add a file to the ZIP archive
-    mz_zip_writer_add_file(archive, 
-                            archive_name, 
-                            file_path, 
-                            NULL, 
-                            0, 
-                            compression_level);
-    // TODO: Read the file from disk
-    // TODO: Compress it and add to the archive
-    // TODO: Print progress if verbose is true
+    
+    // Add a file to the ZIP archive
+    // Read the file from disk
+    // Compress it and add to the archive
+    int archive_err_state = mz_zip_writer_add_file(archive -> zip, 
+                        archive_name, 
+                        file_path, 
+                        NULL, 
+                        0, 
+                        archive -> compression_level);
+
+    // Error handling
+    if (!archive_err_state) {
+        if (verbose) {
+            printf("Error adding: %s\n", file_path);
+        }
+        return ERROR_COMPRESSION;
+    }
+
+    // Print progress if verbose is true
+    if (verbose) {
+        printf("Adding: %s\n", file_path);
+    }
     //
     // Hints:
     // - Cast archive back to your archive state struct
@@ -133,18 +147,20 @@ int add_file_to_archive(void *archive, const char *file_path,
     // - Print: "Adding: %s\n" if verbose
     // - Handle errors gracefully
 
-    (void)archive;
-    (void)file_path;
-    (void)archive_name;
-    (void)verbose;
-    return ERROR_COMPRESSION;
+    return SUCCESS;
 }
 
-int finalize_archive(void *archive, bool verbose) {
-    // TODO: Finalize the ZIP archive
-    // TODO: Close the file
-    // TODO: Free allocated memory
-    // TODO: Print summary if verbose
+int finalize_archive(archive_state *archive, bool verbose) {
+    // Finalize the ZIP archive
+    // Close the file
+    mz_zip_writer_finalize_archive(archive -> zip);
+    mz_zip_writer_end(archive -> zip);
+    // Free allocated memory
+    free_archive(archive);
+    // Print summary if verbose
+    if (verbose) {
+        printf("Files zipped successfully\n");
+    }
     //
     // Hints:
     // - Call mz_zip_writer_finalize_archive() to finish writing
@@ -152,15 +168,28 @@ int finalize_archive(void *archive, bool verbose) {
     // - Free your archive state structure
     // - If verbose, print something like: "Archive created successfully\n"
 
-    (void)archive;
-    (void)verbose;
-    return ERROR_COMPRESSION;
+    return SUCCESS;
 }
 
 int validate_file_list(char **file_list, int file_count) {
-    // TODO: Check that all files in the list exist
-    // TODO: Print error messages for missing files
-    // TODO: Return error if any files are missing
+    // Check that all files in the list exist
+    bool file_missing = false;
+    for (int i = 0; i < file_count; i++) {
+        char * file = file_list[i];
+        struct stat st;
+        if (stat(file, &st) != 0) {
+            // Print error messages for missing files
+            printf("Missing file; %s\n", file);
+            file_missing = true;
+        }
+    }
+
+    // Return error if any files are missing
+    if (file_missing) {
+        return ERROR_FILE_NOT_FOUND;
+    }
+
+    return SUCCESS;
     //
     // Hints:
     // - Loop through file_list from 0 to file_count
@@ -168,21 +197,35 @@ int validate_file_list(char **file_list, int file_count) {
     // - Print error: "Error: File not found: %s\n" for missing files
     // - Return ERROR_FILE_NOT_FOUND if any file is missing
     // - Return SUCCESS if all files exist
-
-    (void)file_list;
-    (void)file_count;
-    return ERROR_FILE_NOT_FOUND;
 }
 
 int create_archive_from_file_list(char **file_list, int file_count,
                                   const char             *output_path,
                                   const ArchiveOptions_t *options) {
-    // TODO: This is the main function that creates a ZIP from a file list
-    // TODO: Steps:
+    // This is the main function that creates a ZIP from a file list
+    // Steps:
     //       1. Validate all files exist using validate_file_list()
+    int status; // status variable storing return values
+    status = validate_file_list(file_list, file_count);
+    if (status != SUCCESS) return status;
+
     //       2. Create the archive using create_archive()
+    archive_state * archive = create_archive(output_path, options -> compression_level);
+    if (archive == NULL) {
+        free_archive(archive);
+        return ERROR_IO;
+    }
     //       3. Loop through each file and add it using add_file_to_archive()
+    for (int i = 0; i < file_count; i++) {
+        status = add_file_to_archive(archive, file_list[i], output_path, options -> verbose);
+        if (status != SUCCESS) {
+            free_archive(archive);
+            return status;
+        }
+    }
     //       4. Finalize the archive using finalize_archive()
+    finalize_archive(archive, options -> verbose);
+
     //       5. Handle errors at each step
     //
     // Hints:
@@ -204,9 +247,10 @@ int create_archive_from_file_list(char **file_list, int file_count,
     //       }
     //   return finalize_archive(...);
 
-    (void)file_list;
-    (void)file_count;
-    (void)output_path;
-    (void)options;
-    return ERROR_COMPRESSION;
+    return SUCCESS;
+}
+
+void free_archive(archive_state * archive) {
+    free(archive -> zip);
+    free(archive);
 }
