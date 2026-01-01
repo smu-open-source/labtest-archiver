@@ -26,11 +26,11 @@ typedef struct {
 } ArchiveOptions_t;
 
 /*
-*/
+ */
 
 typedef struct {
-    mz_zip_archive * zip;
-    int compression_level;
+    mz_zip_archive *zip;
+    int             compression_level;
 } archive_state;
 
 /**
@@ -114,10 +114,10 @@ int create_archive_from_file_list(char **file_list, int file_count,
                                   const ArchiveOptions_t *options);
 
 /**
-* @brief free the archive state pointer
-* 
-* @param archive pointer to the archive state pointer
-*/
-void free_archive(archive_state * archive);
+ * @brief free the archive state pointer
+ *
+ * @param archive pointer to the archive state pointer
+ */
+void free_archive(archive_state *archive);
 
 #endif // ARCHIVER_H

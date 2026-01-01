@@ -3,13 +3,13 @@
  * @brief Implementation of common utility functions
  */
 
-#include <sys/stat.h>
-#include <errno.h>
 #include "common.h"
+#include <errno.h>
+#include <sys/stat.h>
 
 void print_version(void) {
-    printf("LabTest Archiver & Grader v%d.%d.%d\n",
-           VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+    printf("LabTest Archiver & Grader v%d.%d.%d\n", VERSION_MAJOR,
+           VERSION_MINOR, VERSION_PATCH);
     printf("An educational open source project by SMU Open Source Club\n");
 }
 
@@ -54,7 +54,7 @@ long get_file_size(const char *filepath) {
     return (long)st.st_size;
 }
 
-void* safe_malloc(size_t size) {
+void *safe_malloc(size_t size) {
     void *ptr = malloc(size);
     if (ptr == NULL) {
         print_error("Memory allocation failed");

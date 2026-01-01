@@ -6,8 +6,8 @@
 #include "archiver.h"
 #include "miniz.h"
 #include <getopt.h>
-#include <unistd.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 void init_archive_options(ArchiveOptions_t *options) {
     // Implement this function to initialize archive options
@@ -18,8 +18,8 @@ void init_archive_options(ArchiveOptions_t *options) {
     // - Set verbose to false
     // - Initialize any other fields you added to the struct
 
-    options -> compression_level = DEFAULT_COMPRESSION_LEVEL;
-    options -> verbose = false;
+    options->compression_level = DEFAULT_COMPRESSION_LEVEL;
+    options->verbose           = false;
 }
 
 void print_archiver_usage(void) {
@@ -84,7 +84,7 @@ archive_state *create_archive(const char *output_path, int compression_level) {
     // Create a new ZIP archive using miniz
     mz_zip_archive *zip = malloc(sizeof(mz_zip_archive));
     memset(zip, 0, sizeof(mz_zip_archive));
-    
+
     // Allocate memory for an archive state structure
     // Initialize the miniz ZIP writer
     if (!mz_zip_writer_init_file(zip, output_path, 0)) {
@@ -93,9 +93,9 @@ archive_state *create_archive(const char *output_path, int compression_level) {
     }
 
     archive_state *archive = malloc(sizeof(archive_state));
-    archive -> zip = zip;
+    archive->zip           = zip;
     // Store the compression level
-    archive -> compression_level = compression_level;
+    archive->compression_level = compression_level;
     // Return the archive state pointer
     return archive;
     //
@@ -115,16 +115,13 @@ archive_state *create_archive(const char *output_path, int compression_level) {
 
 int add_file_to_archive(archive_state *archive, const char *file_path,
                         const char *archive_name, bool verbose) {
-    
+
     // Add a file to the ZIP archive
     // Read the file from disk
     // Compress it and add to the archive
-    int archive_err_state = mz_zip_writer_add_file(archive -> zip, 
-                        archive_name, 
-                        file_path, 
-                        NULL, 
-                        0, 
-                        archive -> compression_level);
+    int archive_err_state =
+        mz_zip_writer_add_file(archive->zip, archive_name, file_path, NULL, 0,
+                               archive->compression_level);
 
     // Error handling
     if (!archive_err_state) {
@@ -153,8 +150,8 @@ int add_file_to_archive(archive_state *archive, const char *file_path,
 int finalize_archive(archive_state *archive, bool verbose) {
     // Finalize the ZIP archive
     // Close the file
-    mz_zip_writer_finalize_archive(archive -> zip);
-    mz_zip_writer_end(archive -> zip);
+    mz_zip_writer_finalize_archive(archive->zip);
+    mz_zip_writer_end(archive->zip);
     // Free allocated memory
     free_archive(archive);
     // Print summary if verbose
@@ -175,7 +172,7 @@ int validate_file_list(char **file_list, int file_count) {
     // Check that all files in the list exist
     bool file_missing = false;
     for (int i = 0; i < file_count; i++) {
-        char * file = file_list[i];
+        char       *file = file_list[i];
         struct stat st;
         if (stat(file, &st) != 0) {
             // Print error messages for missing files
@@ -207,24 +204,27 @@ int create_archive_from_file_list(char **file_list, int file_count,
     //       1. Validate all files exist using validate_file_list()
     int status; // status variable storing return values
     status = validate_file_list(file_list, file_count);
-    if (status != SUCCESS) return status;
+    if (status != SUCCESS)
+        return status;
 
     //       2. Create the archive using create_archive()
-    archive_state * archive = create_archive(output_path, options -> compression_level);
+    archive_state *archive =
+        create_archive(output_path, options->compression_level);
     if (archive == NULL) {
         free_archive(archive);
         return ERROR_IO;
     }
     //       3. Loop through each file and add it using add_file_to_archive()
     for (int i = 0; i < file_count; i++) {
-        status = add_file_to_archive(archive, file_list[i], output_path, options -> verbose);
+        status = add_file_to_archive(archive, file_list[i], output_path,
+                                     options->verbose);
         if (status != SUCCESS) {
             free_archive(archive);
             return status;
         }
     }
     //       4. Finalize the archive using finalize_archive()
-    finalize_archive(archive, options -> verbose);
+    finalize_archive(archive, options->verbose);
 
     //       5. Handle errors at each step
     //
@@ -250,7 +250,7 @@ int create_archive_from_file_list(char **file_list, int file_count,
     return SUCCESS;
 }
 
-void free_archive(archive_state * archive) {
-    free(archive -> zip);
+void free_archive(archive_state *archive) {
+    free(archive->zip);
     free(archive);
 }

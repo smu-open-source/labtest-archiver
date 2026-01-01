@@ -9,11 +9,44 @@
 #include <glob.h>
 #include <sys/stat.h>
 
+#include <string.h>
+
 int read_config_line(FILE *fp, char *buffer, size_t buffer_size) {
     // TODO: Read a line from the file
+    fgets(buffer, buffer_size, fp);
     // TODO: Find the # character and truncate the line there (comments)
+    char *hash_loc = strchr(buffer, '#');
+    if (hash_loc != NULL) {
+        *hash_loc = '\0';
+    }
+    if (strlen(buffer) == 0) {
+        return -1; // ???????
+    }
     // TODO: Trim leading and trailing whitespace
+    char buffer2[strlen(buffer) + 1];
+
+    char *buffer_ptr = buffer;
+    while (*buffer_ptr == ' ') {
+        buffer_ptr++;
+    }
+    strcpy(buffer2, buffer_ptr);
+
+    buffer_ptr = buffer2 + strlen(buffer2);
+    while (buffer_ptr != buffer2
+           && (*buffer_ptr == '\0' || isspace(*buffer_ptr))) {
+        buffer_ptr--;
+    }
+    if (*buffer_ptr != '\0') {
+        buffer_ptr++;
+        *buffer_ptr = '\0';
+    }
+    strcpy(buffer, buffer2);
     // TODO: Return the length of the cleaned line, or -1 on EOF
+    if (feof(fp) == EOF) {
+        return -1;
+    } else {
+        return strlen(buffer);
+    }
     //
     // Hints:
     // - Use fgets() to read a line
@@ -22,10 +55,12 @@ int read_config_line(FILE *fp, char *buffer, size_t buffer_size) {
     // - Don't forget to handle the case where the line is empty after removing
     // comments
 
+    /*
     (void)fp; // Remove these lines when implementing
     (void)buffer;
     (void)buffer_size;
     return -1;
+    */
 }
 
 int identify_section(const char *line) {
