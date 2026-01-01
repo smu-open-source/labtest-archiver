@@ -26,7 +26,7 @@ int read_config_line(FILE *fp, char *buffer, size_t buffer_size) {
     char buffer2[strlen(buffer) + 1];
 
     char *buffer_ptr = buffer;
-    while (*buffer_ptr == ' ') {
+    while (isspace(*buffer_ptr)) {
         buffer_ptr++;
     }
     strcpy(buffer2, buffer_ptr);
