@@ -234,9 +234,14 @@ int parse_config_file(const char *config_path, char **file_list, int max_files,
 }
 
 void free_file_list(char **file_list, int file_count) {
-    // TODO: Loop through the file_list array
-    // TODO: Free each string using free()
-    // TODO: Set each pointer to NULL after freeing (good practice)
+    // Loop through the file_list array
+    // Free each string using free()
+    // Set each pointer to NULL after freeing (good practice)
+    for (int i = 0; i < file_count; i++) {
+        free(file_list[i]);
+        file_list[i] = NULL;
+    }
+
     //
     // Hints:
     // - for (int i = 0; i < file_count; i++) { ... }
