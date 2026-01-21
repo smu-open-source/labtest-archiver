@@ -10,7 +10,7 @@
 #define ARCHIVER_H
 
 #include "common.h"
-#include "miniz.h"
+#include "../lib/miniz/miniz.h"
 
 /* Archive configuration */
 #define DEFAULT_COMPRESSION_LEVEL 6
@@ -22,11 +22,15 @@
 typedef struct {
     int  compression_level; /* Compression level (0-9) */
     bool verbose;           /* Verbose output */
-    // TODO: Think about what options might be needed for archiving
+    char *input_path; /* path to input folder */
+    char *output_path; /* path to output ZIP file*/
 } ArchiveOptions_t;
 
-/*
-*/
+typedef struct {
+    char * LT_FILES_path;
+    char ** file_list;
+    int * file_count;
+} ArchiverFILES;
 
 typedef struct {
     mz_zip_archive * zip;

@@ -19,11 +19,13 @@ BIN_DIR := bin
 COMMON_SRC := $(SRC_DIR)/common.c
 ARCHIVER_SRC := $(SRC_DIR)/config.c $(SRC_DIR)/archiver.c $(SRC_DIR)/archiver_main.c
 GRADER_SRC := $(SRC_DIR)/grader.c $(SRC_DIR)/grader_main.c
+MINIZ_SRC := lib/miniz/miniz.c
 
 # Object files
 COMMON_OBJ := $(BUILD_DIR)/common.o
 ARCHIVER_OBJ := $(BUILD_DIR)/config.o $(BUILD_DIR)/archiver.o $(BUILD_DIR)/archiver_main.o
 GRADER_OBJ := $(BUILD_DIR)/grader.o $(BUILD_DIR)/grader_main.o
+MINIZ_OBJ := $(BUILD_DIR)/miniz.o
 
 # Binaries
 ARCHIVER_BIN := $(BIN_DIR)/labtest-archiver
@@ -48,7 +50,7 @@ $(BIN_DIR):
 	@mkdir -p $(BIN_DIR)
 
 # Build archiver binary
-$(ARCHIVER_BIN): $(COMMON_OBJ) $(ARCHIVER_OBJ) | $(BIN_DIR)
+$(ARCHIVER_BIN): $(COMMON_OBJ) $(ARCHIVER_OBJ) $(MINIZ_OBJ) | $(BIN_DIR)
 	@echo "Linking archiver..."
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 	@echo "Built: $@"
@@ -58,6 +60,11 @@ $(GRADER_BIN): $(COMMON_OBJ) $(GRADER_OBJ) | $(BIN_DIR)
 	@echo "Linking grader..."
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 	@echo "Built: $@"
+
+# Compile Miniz
+$(BUILD_DIR)/miniz.o: lib/miniz/miniz.c | $(BUILD_DIR)
+	@echo "Compiling miniz..."
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Compile common object
 $(BUILD_DIR)/common.o: $(SRC_DIR)/common.c $(INC_DIR)/common.h | $(BUILD_DIR)

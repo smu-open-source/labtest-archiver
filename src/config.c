@@ -18,14 +18,16 @@ int read_config_line(FILE *fp, char *buffer, size_t buffer_size) {
     }
     // Find the # character and truncate the line there (comments)
     char *comments = strchr(buffer, '#');
-    *comments      = '\0';
+    if (comments != NULL) {
+        *comments      = '\0';
+    }
     // Trim leading and trailing whitespace
     char *start = buffer;
     while (isspace(*start)) {
         start++;
     }
 
-    char *end = buffer + buffer_size - 1;
+    char *end = start + strlen(start) - 1;
     while (end > start && isspace(*end)) {
         *end = '\0';
         end--;
@@ -57,17 +59,10 @@ int identify_section(const char *line) {
     while (isspace(*start)) {
         start++;
     }
-
-    char *end = (char *) line + strlen(line) - 1;
-    while (end > start && isspace(*end)) {
-        *end = '\0';
-        end--;
-    }
     
-
-    if (strcmp(line, "required") == 0) {
+    if (strncmp(line, "required", 8) == 0) {
         return 1;
-    } else if (strcmp(line, "optional") == 0) {
+    } else if (strncmp(line, "optional", 8) == 0) {
         return 2;
     } else {
         return 0;
@@ -255,7 +250,7 @@ int list_directory_files(const char *dir_path, char **file_list, int max_files,
 int add_file_to_list(char **file_list, int *file_count, int max_files,
                      const char *file_path) {
     // Check if file_count < max_files (don't overflow the array)
-    if (*file_count > max_files) {
+    if (*file_count >= max_files) {
         return -1;
     }
     // Allocate memory for the file path string using malloc()
@@ -271,7 +266,7 @@ int add_file_to_list(char **file_list, int *file_count, int max_files,
     file_list[*file_count] = copy;
 
     // Increment *file_count
-    (*file_count) ++;
+    (*file_count)++;
     //
     return SUCCESS;
     // Hints:
@@ -341,10 +336,14 @@ int expand_glob_pattern(const char *pattern, char **file_list, int max_files,
     return SUCCESS;
 }
 
-int parse_config_file(const char *config_path, char **file_list, int max_files,
+int parse_config_file(const char *config_path, const char *base_dir, char **file_list, int max_files,
                       int *file_count) {
     // Open the config file using fopen()
     FILE *fp = fopen(config_path, "r");
+    if (fp == NULL) {
+        perror("Failed to open config file");
+        return ERROR_FILE_NOT_FOUND;
+    }  
     // Initialize current_section to track if we're in required/optional
     char buffer[MAX_PATH_LENGTH];
     int  current_section = 0;
@@ -367,30 +366,33 @@ int parse_config_file(const char *config_path, char **file_list, int max_files,
     //           - If doesn't exist, skip (no error)
 
     while (read_config_line(fp, buffer, sizeof(buffer)) != -1) {
+        
         if (identify_section(buffer) != 0) {
             current_section = identify_section(buffer);
             continue;
         }
         if (is_indented_line(buffer)) {
             char filename[MAX_PATH_LENGTH];
+            char full_path[MAX_PATH_LENGTH];
             if (extract_filename(buffer, filename, sizeof(filename))
                 != SUCCESS) {
                 print_error("Warning: Invalid filename format");
                 continue;
             }
+            snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, filename);
             if (current_section == 1) {//If in required section:
-                if (!validate_required_path(filename)) {
+                if (!validate_required_path(full_path)) {
                     print_error("Error: fails validation");
                     return ERROR_INVALID_ARGS;
                 }
-                if (is_file(filename)) {
-                    if (add_file_to_list(file_list, file_count, max_files, filename)!= SUCCESS) {
+                if (is_file(full_path)) {
+                    if (add_file_to_list(file_list, file_count, max_files, full_path)!= SUCCESS) {
                         print_error("fail to add file to list");
                         fclose(fp);
                         return ERROR_IO;
                     } 
                 }else {
-                    if (list_directory_files(filename, file_list, max_files, file_count) != SUCCESS) {
+                    if (list_directory_files(full_path, file_list, max_files, file_count) != SUCCESS) {
                         print_error("fail to list directory files");
                         fclose(fp);
                         return ERROR_IO;
@@ -398,14 +400,14 @@ int parse_config_file(const char *config_path, char **file_list, int max_files,
                 }
             }
             if (current_section == 2){//If in optional section:
-                if(is_glob_pattern(filename)){
-                    if (expand_glob_pattern(filename, file_list,max_files,file_count) != SUCCESS){
+                if(is_glob_pattern(full_path)){
+                    if (expand_glob_pattern(full_path, file_list,max_files,file_count) != SUCCESS){
                         print_error("fail to expand global pattern");
                         continue;
                     }
 
-                }else if (validate_required_path(filename)){
-                    if (add_file_to_list(file_list, file_count, max_files, filename)!= SUCCESS) {
+                }else if (validate_required_path(full_path)){
+                    if (add_file_to_list(file_list, file_count, max_files, full_path)!= SUCCESS) {
                         print_error("fail to add file to list");
                         fclose(fp);
                         return ERROR_IO;

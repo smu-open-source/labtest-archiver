@@ -4,7 +4,7 @@
  */
 
 #include "archiver.h"
-#include "miniz.h"
+#include "../lib/miniz/miniz.h"
 #include <getopt.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -20,6 +20,8 @@ void init_archive_options(ArchiveOptions_t *options) {
 
     options -> compression_level = DEFAULT_COMPRESSION_LEVEL;
     options -> verbose = false;
+    options -> input_path = NULL;
+    options -> output_path = NULL;
 }
 
 void print_archiver_usage(void) {
@@ -30,6 +32,8 @@ void print_archiver_usage(void) {
     printf("  -l, --level LEVEL      Compression level 0-9 (default: %d)\n",
            DEFAULT_COMPRESSION_LEVEL);
     printf("  -v, --verbose          Enable verbose output\n");
+    printf("  -i, --input            Path to input file directories\n");
+    printf("  -o, --output           Path to output ZIP file\n");
     printf("  -h, --help             Display this help message\n");
     printf("  -V, --version          Display version information\n\n");
 }
@@ -43,6 +47,8 @@ int parse_archive_args(int argc, char **argv, ArchiveOptions_t *options) {
 
     static struct option long_options[] = {{"level", required_argument, 0, 'l'},
                                            {"verbose", no_argument, 0, 'v'},
+                                           {"input", required_argument, 0, 'i'},
+                                           {"output", required_argument, 0, '0'},
                                            {"help", no_argument, 0, 'h'},
                                            {"version", no_argument, 0, 'V'},
                                            {0, 0, 0, 0}};
@@ -50,7 +56,7 @@ int parse_archive_args(int argc, char **argv, ArchiveOptions_t *options) {
     int opt;
     int option_index = 0;
 
-    while ((opt = getopt_long(argc, argv, "l:vhV", long_options, &option_index))
+    while ((opt = getopt_long(argc, argv, "l:i:o:vhV", long_options, &option_index))
            != -1) {
         switch (opt) {
             case 'l':
@@ -65,6 +71,12 @@ int parse_archive_args(int argc, char **argv, ArchiveOptions_t *options) {
             case 'v':
                 options->verbose = true;
                 break;
+            case 'i':
+                options->input_path = optarg;
+                break;
+            case 'o':
+                options->output_path = optarg;
+                break;
             case 'h':
                 print_archiver_usage();
                 exit(SUCCESS);
@@ -75,6 +87,11 @@ int parse_archive_args(int argc, char **argv, ArchiveOptions_t *options) {
                 print_archiver_usage();
                 return ERROR_INVALID_ARGS;
         }
+    }
+
+    if (options->output_path == NULL || options->input_path == NULL) {
+        printf("Both -i <input> and -o <output> must be specified\n");
+        return ERROR_INVALID_ARGS;
     }
 
     return SUCCESS;

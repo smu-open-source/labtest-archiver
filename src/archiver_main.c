@@ -11,8 +11,8 @@
  * 4. Create ZIP archive with those files
  */
 
-#include "archiver.h"
-#include "config.h"
+#include "../include/archiver.h"
+#include "../include/config.h"
 
 int main(int argc, char **argv) {
     ArchiveOptions_t options;
@@ -24,9 +24,30 @@ int main(int argc, char **argv) {
         return result;
     }
 
-    // TODO: Step 2: Get config file path from command line
+    ArchiverFILES files;
+    char LT_FILE_path[MAX_PATH_LENGTH];
+    strcpy(LT_FILE_path, options.input_path);
+    strcat(LT_FILE_path, "/.LT_FILES");
+    files.LT_FILES_path = LT_FILE_path;
 
+    char *file_list[MAX_CONFIG_FILES];
+    int file_count = 0;
+    files.file_list = file_list;
+    files.file_count = &file_count;
+    // TODO: Step 2: Get config file path from command line
+    printf(
+        "%s\n", files.LT_FILES_path
+    );
+
+    parse_config_file(files.LT_FILES_path, options.input_path, files.file_list, MAX_CONFIG_FILES, files.file_count);
+        
+    printf("%i\n", *(files.file_count));
+    for (int i = 0; i < *(files.file_count); i++) {
+        printf("%s\n", (files.file_list)[i]);
+    }
     // TODO: Step 3: Parse the config file to get file list
+    
+
 
     // TODO: Step 4: Get output path using student ID (prompt them)
 

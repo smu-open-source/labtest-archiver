@@ -30,6 +30,10 @@
  *
  * Think about what data you need to store for each section of the config.
  */
+typedef struct {
+    char ** include_single;
+    char ** include_all;
+} required_files;
 
 /**
  * @brief Read a line from the config file and strip comments
@@ -144,7 +148,7 @@ int expand_glob_pattern(const char *pattern, char **file_list, int max_files,
  * @param file_count Number of files found (output)
  * @return SUCCESS on success, error code on failure
  */
-int parse_config_file(const char *config_path, char **file_list, int max_files,
+int parse_config_file(const char *config_path, const char *base_dir, char **file_list, int max_files,
                       int *file_count);
 
 /**
