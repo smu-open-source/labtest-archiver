@@ -16,28 +16,30 @@ int read_config_line(FILE *fp, char *buffer, size_t buffer_size) {
     if (fgets(buffer, buffer_size, fp) == NULL) {
         return -1;
     }
+    
+    //
     // Find the # character and truncate the line there (comments)
+
+    // Remove comments
     char *comments = strchr(buffer, '#');
     if (comments != NULL) {
-        *comments      = '\0';
-    }
-    // Trim leading and trailing whitespace
-    char *start = buffer;
-    while (isspace(*start)) {
-        start++;
+        *comments = '\0';
     }
 
-    char *end = start + strlen(start) - 1;
-    while (end > start && isspace(*end)) {
+    // Trim trailing whitespace ONLY
+    char *end = buffer + strlen(buffer) - 1;
+    while (end >= buffer && isspace(*end)) {
         *end = '\0';
         end--;
     }
 
-    // Return the length of the cleaned line, or -1 on EOF
-    if (end - start < 0) {
-        return -1;
+    if (*buffer == '\0') {
+        return 0;
     }
-    return end - start;
+
+    return strlen(buffer);
+    //
+
     //
     // Hints:
     // - Use fgets() to read a line//fgets(char *str, int size, FILE *stream);
@@ -249,37 +251,31 @@ int list_directory_files(const char *dir_path, char **file_list, int max_files,
 
 int add_file_to_list(char **file_list, int *file_count, int max_files,
                      const char *file_path) {
+
+    /* Deduplication: check if file already exists in list */
+    for (int i = 0; i < *file_count; i++) {
+        if (strcmp(file_list[i], file_path) == 0) {
+            return SUCCESS; // already added, silently ignore
+        }
+    }
+
     // Check if file_count < max_files (don't overflow the array)
     if (*file_count >= max_files) {
-        return -1;
+        return ERROR_IO;
     }
-    // Allocate memory for the file path string using malloc()
+
+    // Allocate memory for the file path string
     char *copy = malloc(strlen(file_path) + 1);
     if (copy == NULL) {
         return ERROR_MEMORY_ALLOCATION;
     }
 
-    // Copy the file_path to the allocated memory using strcpy()
     strcpy(copy, file_path);
 
-    // Store the pointer in file_list[*file_count]
     file_list[*file_count] = copy;
-
-    // Increment *file_count
     (*file_count)++;
-    //
-    return SUCCESS;
-    // Hints:
-    // - Use strlen() to get the length of file_path
-    // - malloc(strlen(file_path) + 1) to allocate memory (+1 for null
-    // terminator)
-    // - Check if malloc returns NULL (out of memory)
-    // - strcpy(allocated_memory, file_path) to copy the string
 
-    (void)file_list;
-    (void)file_count;
-    (void)max_files;
-    (void)file_path;
+    return SUCCESS;
 }
 
 bool is_glob_pattern(const char *path) {
@@ -303,7 +299,7 @@ int expand_glob_pattern(const char *pattern, char **file_list, int max_files,
     glob_t results;
 
     int glob_ret = glob(pattern, 0, NULL, &results);
-    if (glob_ret == 0){
+    if (glob_ret != 0){
         globfree(&results);
         return SUCCESS;
     }
@@ -329,10 +325,6 @@ int expand_glob_pattern(const char *pattern, char **file_list, int max_files,
     // - Don't forget to call globfree(&results) when done
     // - For optional files, no matches is OK (return SUCCESS)
 
-    (void)pattern;
-    (void)file_list;
-    (void)max_files;
-    (void)file_count;
     return SUCCESS;
 }
 
@@ -399,21 +391,33 @@ int parse_config_file(const char *config_path, const char *base_dir, char **file
                     }
                 }
             }
-            if (current_section == 2){//If in optional section:
-                if(is_glob_pattern(full_path)){
-                    if (expand_glob_pattern(full_path, file_list,max_files,file_count) != SUCCESS){
-                        print_error("fail to expand global pattern");
-                        continue;
+            if (current_section == 2) { // optional section
+
+                /* IMPORTANT:
+                 * 1. Detect glob on the *filename*, not full_path
+                 * 2. Do NOT call validate_required_path() for optional files
+                 */
+
+                if (is_glob_pattern(filename)) {
+                    char glob_pattern[MAX_PATH_LENGTH];
+                    snprintf(glob_pattern, sizeof(glob_pattern), "%s/%s", base_dir, filename);
+
+                    if (expand_glob_pattern(glob_pattern, file_list, max_files, file_count)
+                        != SUCCESS) {
+                        print_error("fail to expand glob pattern");
                     }
 
-                }else if (validate_required_path(full_path)){
-                    if (add_file_to_list(file_list, file_count, max_files, full_path)!= SUCCESS) {
-                        print_error("fail to add file to list");
-                        fclose(fp);
-                        return ERROR_IO;
-                    } 
-                }else{
-                    continue;
+                } else {
+                    /* Optional non-glob file: only add if it exists */
+                    if (access(full_path, F_OK) == 0) {
+                        if (add_file_to_list(file_list, file_count, max_files, full_path)
+                            != SUCCESS) {
+                            print_error("fail to add file to list");
+                            fclose(fp);
+                            return ERROR_IO;
+                        }
+                    }
+                    /* If it doesn't exist, silently ignore */
                 }
             }
         }

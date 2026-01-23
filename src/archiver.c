@@ -234,7 +234,19 @@ int create_archive_from_file_list(char **file_list, int file_count,
     }
     //       3. Loop through each file and add it using add_file_to_archive()
     for (int i = 0; i < file_count; i++) {
-        status = add_file_to_archive(archive, file_list[i], output_path, options -> verbose);
+        const char *file_path = file_list[i];
+
+        const char *archive_name = strrchr(file_path, '/'); // TODO: Support for windows directories....
+        if (archive_name) {
+            archive_name++;
+        } else {
+            archive_name = file_path;
+        }
+        
+        status = add_file_to_archive(archive, 
+                                    file_path, 
+                                    archive_name, 
+                                    options -> verbose);
         if (status != SUCCESS) {
             free_archive(archive);
             return status;

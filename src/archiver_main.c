@@ -41,14 +41,17 @@ int main(int argc, char **argv) {
 
     parse_config_file(files.LT_FILES_path, options.input_path, files.file_list, MAX_CONFIG_FILES, files.file_count);
         
-    printf("%i\n", *(files.file_count));
-    for (int i = 0; i < *(files.file_count); i++) {
-        printf("%s\n", (files.file_list)[i]);
-    }
+    // printf("%i\n", *(files.file_count));
+    // for (int i = 0; i < *(files.file_count); i++) {
+    //     printf("%s\n", (files.file_list)[i]);
+    // }
     // TODO: Step 3: Parse the config file to get file list
+    create_archive_from_file_list(files.file_list, 
+                                    *(files.file_count), 
+                                    options.output_path, 
+                                    &options);
     
-
-
+    
     // TODO: Step 4: Get output path using student ID (prompt them)
 
     // TODO: Step 5: Create the archive

@@ -1,6 +1,5 @@
 required:
     specified.c
-    star.c
 
 optional:
     *.c
